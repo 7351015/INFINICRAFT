@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InfiniCraft - AI Powered Crafting</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        color: white;
+      }
+
+      .header h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      }
+
+      .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
+      .game-area {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      .elements-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      }
+
+      .elements-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .elements-header h2 {
+        color: #4a5568;
+        font-size: 1.5rem;
+      }
+
+      .discovery-count {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .elements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 2px dashed #e2e8f0;
+        border-radius: 15px;
+      }
+
+      .element {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        cursor: grab;
+        transition: all 0.3s ease;
+        user-select: none;
+      }
+
+      .element:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-color: #667eea;
+      }
+
+      .element:active {
+        cursor: grabbing;
+      }
+
+      .element.new {
+        animation: newElement 1s ease-out;
+        border-color: #48bb78;
+        background: linear-gradient(45deg, #f0fff4, #c6f6d5);
+      }
+
+      @keyframes newElement {
+        0% {
+          transform: scale(0) rotate(180deg);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.2) rotate(90deg);
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+      }
+
+      .element-emoji {
+        font-size: 2.5rem;
+        margin-bottom: 8px;
+      }
+
+      .element-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #4a5568;
+        word-wrap: break-word;
+      }
+
+      .crafting-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      }
+
+      .crafting-area {
+        text-align: center;
+      }
+
+      .crafting-area h2 {
+        color: #4a5568;
+        margin-bottom: 25px;
+        font-size: 1.5rem;
+      }
+
+      .slots-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 25px;
+      }
+
+      .slot {
+        width: 120px;
+        height: 120px;
+        border: 3px dashed #cbd5e0;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f7fafc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .slot.filled {
+        border-color: #667eea;
+        background: white;
+        border-style: solid;
+      }
+
+      .slot.drag-over {
+        border-color: #48bb78;
+        background: #f0fff4;
+        transform: scale(1.05);
+      }
+
+      .slot-placeholder {
+        color: #a0aec0;
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
+      .selected-element {
+        text-align: center;
+      }
+
+      .selected-element .element-emoji {
+        font-size: 2rem;
+        margin-bottom: 5px;
+      }
+
+      .selected-element .element-name {
+        font-size: 0.8rem;
+        color: #4a5568;
+        font-weight: 600;
+      }
+
+      .plus-sign {
+        font-size: 2rem;
+        color: #a0aec0;
+        font-weight: bold;
+      }
+
+      .combine-btn {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .combine-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      }
+
+      .combine-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .combine-btn.loading {
+        position: relative;
+        color: transparent;
+      }
+
+      .combine-btn.loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        border: 2px solid transparent;
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+
+      .result-area {
+        min-height: 150px;
+        background: #f7fafc;
+        border-radius: 15px;
+        padding: 20px;
+        border: 2px dashed #e2e8f0;
+      }
+
+      .result-placeholder {
+        color: #a0aec0;
+        text-align: center;
+        font-style: italic;
+        margin-top: 50px;
+      }
+
+      .result-content {
+        text-align: center;
+        animation: resultAppear 0.8s ease-out;
+      }
+
+      @keyframes resultAppear {
+        0% {
+          opacity: 0;
+          transform: scale(0.8) translateY(20px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .result-element {
+        display: inline-block;
+        background: white;
+        border: 2px solid #48bb78;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+      }
+
+      .result-element .element-emoji {
+        font-size: 3rem;
+        margin-bottom: 10px;
+      }
+
+      .result-element .element-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #2d3748;
+        margin-bottom: 5px;
+      }
+
+      .result-description {
+        color: #4a5568;
+        font-style: italic;
+        line-height: 1.5;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+
+      .discoveries-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      }
+
+      .discoveries-section h2 {
+        color: #4a5568;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+      }
+
+      .discoveries-list {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .discovery-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: #f7fafc;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+      }
+
+      .discovery-item .element-emoji {
+        font-size: 1.5rem;
+      }
+
+      .discovery-info {
+        flex: 1;
+      }
+
+      .discovery-name {
+        font-weight: bold;
+        color: #2d3748;
+        margin-bottom: 2px;
+      }
+
+      .discovery-recipe {
+        font-size: 0.8rem;
+        color: #718096;
+      }
+
+      @media (max-width: 768px) {
+        .game-area {
+          grid-template-columns: 1fr;
+        }
+        
+        .header h1 {
+          font-size: 2rem;
+        }
+        
+        .slots-container {
+          flex-direction: column;
+          gap: 15px;
+        }
+        
+        .plus-sign {
+          transform: rotate(90deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🧪 InfiniCraft</h1>
+        <p>Combine elements using AI to discover infinite possibilities!</p>
+      </div>
+
+      <div class="game-area">
+        <div class="elements-section">
+          <div class="elements-header">
+            <h2>Your Elements</h2>
+            <div class="discovery-count" id="discoveryCount">4 discovered</div>
+          </div>
+          <div class="elements-grid" id="elementsGrid">
+            <!-- Elements will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <div class="crafting-section">
+          <div class="crafting-area">
+            <h2>Crafting Station</h2>
+            <div class="slots-container">
+              <div class="slot" id="slot1">
+                <div class="slot-placeholder">Drop element here</div>
+              </div>
+              <div class="plus-sign">+</div>
+              <div class="slot" id="slot2">
+                <div class="slot-placeholder">Drop element here</div>
+              </div>
+            </div>
+            <button class="combine-btn" id="combineBtn" disabled>Combine Elements</button>
+            <div class="result-area" id="resultArea">
+              <div class="result-placeholder">Combine two elements to see what you create!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="discoveries-section">
+        <h2>Recent Discoveries</h2>
+        <div class="discoveries-list" id="discoveriesList">
+          <!-- Recent discoveries will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
